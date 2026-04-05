@@ -15,6 +15,8 @@
 // ============================================================================
 
 const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
+const { randomUUID } = require('crypto');
+const { savePendingProposal, updatePendingProposal } = require('./_store');
 
 // ── Tool definitions for Claude ─────────────────────────────────────────────
 // These are the "hands" Claude can use. Claude decides WHEN and HOW to use them.
@@ -150,7 +152,10 @@ function sanitizeForPdf(text) {
 
 // ── Tool implementations ────────────────────────────────────────────────────
 
-let proposalPdfBase64 = null; // Stored in memory for the email attachment step
+let proposalPdfBase64 = null;      // PDF bytes for this request
+let pendingProposalId = null;      // Set when proposal is queued for approval
+let proposalContactInfo = {};      // {company_name, contact_name} from render step
+let currentIntakeContext = null;   // Raw intake context string for revision support
 
 async function renderProposalPdf({ company_name, contact_name, sections }) {
   // Sanitize ALL text before rendering
@@ -160,6 +165,7 @@ async function renderProposalPdf({ company_name, contact_name, sections }) {
     heading: sanitizeForPdf(s.heading),
     body: sanitizeForPdf(s.body),
   }));
+  proposalContactInfo = { company_name, contact_name };
 
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.Helvetica);
@@ -258,8 +264,69 @@ async function renderProposalPdf({ company_name, contact_name, sections }) {
   return { success: true, pages: pdf.getPageCount(), size_kb: Math.round(pdfBytes.length / 1024) };
 }
 
+function getAppUrl() {
+  if (process.env.APP_URL) return process.env.APP_URL;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return 'http://localhost:3000';
+}
+
+function getApprovalUrl(id) {
+  return `${getAppUrl()}/api/approve-proposal?id=${id}`;
+}
+
 async function sendEmail({ to, subject, body, attach_pdf }) {
   const apiKey = process.env.RESEND_API_KEY;
+  const isApprovalMode = process.env.APPROVAL_MODE === 'true';
+
+  if (isApprovalMode) {
+    // Store the proposal and email the owner for review — do not email visitor yet
+    const id = randomUUID();
+    pendingProposalId = id;
+
+    await savePendingProposal({
+      id,
+      visitor_email: to,
+      visitor_name: proposalContactInfo.contact_name || null,
+      company_name: proposalContactInfo.company_name || null,
+      proposal_pdf_base64: attach_pdf ? proposalPdfBase64 : null,
+      email_subject: subject,
+      email_body: body,
+      intake_data: currentIntakeContext ? { raw: currentIntakeContext } : null,
+      status: 'pending',
+    });
+
+    console.log(`Approval mode: proposal stored with id=${id}`);
+
+    if (!apiKey) {
+      return { success: true, pending_id: id, note: 'Stored. RESEND_API_KEY not set — owner email skipped.' };
+    }
+
+    const ownerEmail = process.env.OWNER_EMAIL || 'madmanu@gmail.com';
+    const approvalUrl = getApprovalUrl(id);
+    const payload = {
+      from: 'Manish Madan <onboarding@resend.dev>',
+      to: ownerEmail,
+      subject: `[REVIEW NEEDED] ${subject}`,
+      text: `A new proposal is ready for your review.\n\nVisitor: ${proposalContactInfo.contact_name || to} at ${proposalContactInfo.company_name || '(unknown company)'}\nVisitor email: ${to}\n\n---\n${body}\n\n---\nApprove or revise:\n${approvalUrl}`,
+    };
+    if (attach_pdf && proposalPdfBase64) {
+      payload.attachments = [{ filename: 'proposal.pdf', content: proposalPdfBase64 }];
+    }
+
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      console.error('Resend error (owner review email):', err);
+      return { success: true, pending_id: id, note: 'Stored. Owner email failed — check RESEND_API_KEY.' };
+    }
+    return { success: true, pending_id: id, status: 'pending_approval' };
+  }
+
+  // Default mode: send directly to visitor
   if (!apiKey) return { success: false, error: 'RESEND_API_KEY not configured' };
 
   const payload = {
@@ -268,29 +335,20 @@ async function sendEmail({ to, subject, body, attach_pdf }) {
     subject,
     text: body,
   };
-
   if (attach_pdf && proposalPdfBase64) {
-    payload.attachments = [{
-      filename: 'proposal.pdf',
-      content: proposalPdfBase64,
-    }];
+    payload.attachments = [{ filename: 'proposal.pdf', content: proposalPdfBase64 }];
   }
 
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-
   if (!res.ok) {
     const err = await res.text();
     console.error('Resend error:', err);
     return { success: false, error: `Resend API error: ${res.status}` };
   }
-
   const data = await res.json();
   return { success: true, email_id: data.id };
 }
@@ -331,6 +389,15 @@ async function storeLead(leadData) {
     return { success: false, error: `Supabase error: ${res.status}` };
   }
 
+  // In approval mode, tag the pending proposal with the lead score
+  if (process.env.APPROVAL_MODE === 'true' && pendingProposalId && leadData.score) {
+    try {
+      await updatePendingProposal(pendingProposalId, { lead_score: leadData.score });
+    } catch (e) {
+      console.error('Failed to update pending proposal score:', e.message);
+    }
+  }
+
   return { success: true };
 }
 
@@ -339,11 +406,18 @@ async function alertOwner({ message }) {
   const chatId = process.env.TELEGRAM_USER_ID;
   if (!botToken || !chatId) return { success: false, error: 'Telegram not configured' };
 
+  // In approval mode, prepend PENDING APPROVAL badge and append approval link
+  let fullMessage = message;
+  if (process.env.APPROVAL_MODE === 'true' && pendingProposalId) {
+    const approvalUrl = getApprovalUrl(pendingProposalId);
+    fullMessage = `🔔 PENDING APPROVAL\n\n${message}\n\n──────────────\nApprove or revise:\n${approvalUrl}`;
+  }
+
   // Send text alert
   const textRes = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: chatId, text: message }),
+    body: JSON.stringify({ chat_id: chatId, text: fullMessage }),
   });
 
   if (!textRes.ok) {
@@ -468,10 +542,24 @@ Write exactly these 5 sections. Each section body should be 2–4 sentences in M
 - Call alert_owner with: company name, contact name, challenge in one sentence, score (HIGH/MEDIUM/LOW), and one line on why that score
 - You can call multiple independent tools in the same turn. render_proposal_pdf must complete before send_email (because the email attaches the PDF).`;
 
+// Appended to system prompt only when APPROVAL_MODE=true
+const APPROVAL_MODE_ADDENDUM = `
+
+## APPROVAL MODE — ACTIVE
+
+The owner reviews every proposal before it reaches the visitor. Your behavior changes slightly:
+
+1. Call render_proposal_pdf as normal.
+2. Call send_email with the visitor's details — the system automatically routes it to the owner for review instead of the visitor. Do NOT skip send_email.
+3. Call store_lead if available.
+4. Call alert_owner with your usual lead summary. Begin your message with "PENDING APPROVAL —" and include the lead score. The system will append the approval link automatically.
+
+Do not attempt to send directly to the visitor. The approval workflow handles delivery.`;
+
 // ── Main handler ────────────────────────────────────────────────────────────
 // Works as both Express route (local dev) and Vercel serverless function
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -484,21 +572,30 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'conversation or intakeData required' });
   }
 
-  // Reset PDF state for this request
+  // Reset per-request state
   proposalPdfBase64 = null;
+  pendingProposalId = null;
+  proposalContactInfo = {};
+  currentIntakeContext = null;
 
   // Build context from intake data or conversation transcript
   const intakeContext = intakeData
     ? `VISITOR INTAKE DATA:\n${JSON.stringify(intakeData, null, 2)}`
     : `CONVERSATION TRANSCRIPT:\n${conversation.map(m => `${m.role}: ${m.content}`).join('\n')}`;
+  currentIntakeContext = intakeContext;
 
   // Build tools list — store_lead only available if Supabase is configured
   const tools = getTools();
   const supabaseEnabled = tools.some(t => t.function?.name === 'store_lead');
-  console.log(`Agent starting with ${tools.length} tools${supabaseEnabled ? ' (Supabase enabled)' : ''}`);
+  const approvalMode = process.env.APPROVAL_MODE === 'true';
+  console.log(`Agent starting with ${tools.length} tools${supabaseEnabled ? ' (Supabase enabled)' : ''}${approvalMode ? ' [APPROVAL MODE]' : ''}`);
+
+  const systemPrompt = approvalMode
+    ? AGENT_SYSTEM_PROMPT + APPROVAL_MODE_ADDENDUM
+    : AGENT_SYSTEM_PROMPT;
 
   let messages = [
-    { role: 'system', content: AGENT_SYSTEM_PROMPT },
+    { role: 'system', content: systemPrompt },
     { role: 'user', content: `${intakeContext}\n\nPlease write a personalized proposal, score this lead, and use your tools to send everything.` },
   ];
 
@@ -581,4 +678,9 @@ module.exports = async function handler(req, res) {
 
   console.log('Agent pipeline complete:', results);
   return res.json({ success: true, results });
-};
+}
+
+module.exports = handler;
+module.exports.renderProposalPdf = renderProposalPdf;
+module.exports.sanitizeForPdf = sanitizeForPdf;
+module.exports.getApprovalUrl = getApprovalUrl;
