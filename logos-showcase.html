@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Logo Showcase — Manish Madan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f1117;
+      --bg-card:  #181c26;
+      --fg:       #e8e4dc;
+      --fg-muted: #9a968e;
+      --accent:   #c9933a;
+      --border:   #262b38;
+      --sans:     'Inter', system-ui, sans-serif;
+      --serif:    'Playfair Display', Georgia, serif;
+    }
+
+    body {
+      background: #1a1e2a;
+      font-family: var(--sans);
+      color: var(--fg);
+      -webkit-font-smoothing: antialiased;
+      padding: 3rem 2rem 5rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 3.5rem;
+    }
+
+    header h1 {
+      font-family: var(--serif);
+      font-size: 1.6rem;
+      color: var(--fg);
+      margin-bottom: 0.4rem;
+    }
+
+    header p {
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+      letter-spacing: 0.04em;
+    }
+
+    .logo-section {
+      max-width: 900px;
+      margin: 0 auto 4rem;
+    }
+
+    .logo-section-title {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.25rem;
+      padding-left: 2px;
+    }
+
+    .logo-section-desc {
+      font-size: 0.88rem;
+      color: var(--fg-muted);
+      margin-bottom: 1.75rem;
+      line-height: 1.7;
+    }
+
+    .preview-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .preview-box {
+      border-radius: 8px;
+      padding: 3rem 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .preview-box.dark {
+      background: #0f1117;
+      border: 1px solid #262b38;
+    }
+
+    .preview-box.light {
+      background: #f5f3ef;
+      border: 1px solid #ddd9d2;
+    }
+
+    .preview-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .dark  .preview-label { color: #555c6e; }
+    .light .preview-label { color: #aaa49c; }
+
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+    }
+
+    /* ── Logo 1: icon mark + wordmark ── */
+
+    /* Dark background version */
+    .dark  .v1-wordmark { fill: #e8e4dc; }
+    .dark  .v1-tagline  { fill: #9a968e; }
+    .light .v1-wordmark { fill: #0f1117; }
+    .light .v1-tagline  { fill: #9a968e; }
+
+    /* ── Logo 2: MM typographic ── */
+    .dark  .v2-left-m   { fill: #e8e4dc; }
+    .dark  .v2-tagline  { fill: #9a968e; opacity: 1; }
+    .dark  .v2-name     { fill: #9a968e; }
+    .light .v2-left-m   { fill: #0f1117; }
+    .light .v2-tagline  { fill: #0f1117; opacity: 0.5; }
+    .light .v2-name     { fill: #9a968e; }
+
+    /* Sizes */
+    .logo-wrap svg { height: 60px; width: auto; }
+
+    /* Divider */
+    .divider {
+      max-width: 900px;
+      margin: 0 auto 4rem;
+      border: none;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Notes */
+    .notes {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2rem;
+    }
+
+    .notes h3 {
+      font-family: var(--serif);
+      font-size: 1.05rem;
+      color: var(--fg);
+      margin-bottom: 1rem;
+    }
+
+    .notes ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .notes li {
+      font-size: 0.88rem;
+      color: var(--fg-muted);
+      padding-left: 1.1rem;
+      position: relative;
+      line-height: 1.6;
+    }
+
+    .notes li::before {
+      content: '→';
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-size: 0.8rem;
+    }
+
+    @media (max-width: 600px) {
+      .preview-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Logo Showcase</h1>
+    <p>Manish Madan · Two options · Dark &amp; light backgrounds</p>
+  </header>
+
+  <!-- ── Logo 1 ── -->
+  <div class="logo-section">
+    <p class="logo-section-title">Logo 1 — Icon Mark + Wordmark</p>
+    <p class="logo-section-desc">
+      A structured portfolio mark (tiered blocks representing governance hierarchy) paired with the full name and a descriptor tagline.
+      The amber cascade in the icon fades right → suggesting depth and scale.
+    </p>
+    <div class="preview-grid">
+
+      <!-- Dark -->
+      <div class="preview-box dark">
+        <span class="preview-label">On dark</span>
+        <div class="logo-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 72" fill="none">
+            <!-- Mark -->
+            <rect x="0"  y="4"  width="14" height="14" rx="2" fill="#c9933a"/>
+            <rect x="18" y="4"  width="14" height="14" rx="2" fill="#c9933a" opacity="0.55"/>
+            <rect x="36" y="4"  width="14" height="14" rx="2" fill="#c9933a" opacity="0.25"/>
+            <rect x="0"  y="22" width="14" height="14" rx="2" fill="#c9933a" opacity="0.7"/>
+            <rect x="18" y="22" width="14" height="14" rx="2" fill="#c9933a" opacity="0.35"/>
+            <rect x="0"  y="40" width="14" height="14" rx="2" fill="#c9933a" opacity="0.4"/>
+            <!-- Sep -->
+            <line x1="66" y1="8" x2="66" y2="54" stroke="#c9933a" stroke-width="1" opacity="0.4"/>
+            <!-- Wordmark -->
+            <text x="78" y="36"
+                  font-family="'Playfair Display', Georgia, serif"
+                  font-size="22" font-weight="700" letter-spacing="-0.5"
+                  fill="#e8e4dc">MANISH MADAN</text>
+            <!-- Tagline -->
+            <text x="79" y="52"
+                  font-family="'Inter', Helvetica, Arial, sans-serif"
+                  font-size="9.5" font-weight="500" letter-spacing="2.2"
+                  fill="#9a968e">PORTFOLIO &amp; PMO LEADERSHIP</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Light -->
+      <div class="preview-box light">
+        <span class="preview-label">On light</span>
+        <div class="logo-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 72" fill="none">
+            <rect x="0"  y="4"  width="14" height="14" rx="2" fill="#c9933a"/>
+            <rect x="18" y="4"  width="14" height="14" rx="2" fill="#c9933a" opacity="0.55"/>
+            <rect x="36" y="4"  width="14" height="14" rx="2" fill="#c9933a" opacity="0.25"/>
+            <rect x="0"  y="22" width="14" height="14" rx="2" fill="#c9933a" opacity="0.7"/>
+            <rect x="18" y="22" width="14" height="14" rx="2" fill="#c9933a" opacity="0.35"/>
+            <rect x="0"  y="40" width="14" height="14" rx="2" fill="#c9933a" opacity="0.4"/>
+            <line x1="66" y1="8" x2="66" y2="54" stroke="#c9933a" stroke-width="1" opacity="0.4"/>
+            <text x="78" y="36"
+                  font-family="'Playfair Display', Georgia, serif"
+                  font-size="22" font-weight="700" letter-spacing="-0.5"
+                  fill="#0f1117">MANISH MADAN</text>
+            <text x="79" y="52"
+                  font-family="'Inter', Helvetica, Arial, sans-serif"
+                  font-size="9.5" font-weight="500" letter-spacing="2.2"
+                  fill="#9a968e">PORTFOLIO &amp; PMO LEADERSHIP</text>
+          </svg>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── Logo 2 ── -->
+  <div class="logo-section">
+    <p class="logo-section-title">Logo 2 — Typographic / Monogram</p>
+    <p class="logo-section-desc">
+      A large serif MM monogram — charcoal left M, amber right M — anchored by an amber rule.
+      The full name and title stack quietly beside a thin vertical accent.
+      No icon. The letterforms carry the weight.
+    </p>
+    <div class="preview-grid">
+
+      <!-- Dark -->
+      <div class="preview-box dark">
+        <span class="preview-label">On dark</span>
+        <div class="logo-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 80" fill="none">
+            <text x="4" y="52"
+                  font-family="'Playfair Display', Georgia, serif"
+                  font-size="52" font-weight="700" letter-spacing="-2"
+                  fill="#e8e4dc">M</text>
+            <text x="38" y="52"
+                  font-family="'Playfair Display', Georgia, serif"
+                  font-size="52" font-weight="700" letter-spacing="-2"
+                  fill="#c9933a">M</text>
+            <rect x="4" y="57" width="74" height="2.5" rx="1.25" fill="#c9933a"/>
+            <text x="4" y="71"
+                  font-family="'Inter', Helvetica, Arial, sans-serif"
+                  font-size="9" font-weight="600" letter-spacing="3.2"
+                  fill="#9a968e">MANISH MADAN</text>
+            <line x1="104" y1="14" x2="104" y2="68" stroke="#c9933a" stroke-width="1" opacity="0.35"/>
+            <text x="114" y="32"
+                  font-family="'Inter', Helvetica, Arial, sans-serif"
+                  font-size="9" font-weight="500" letter-spacing="1.8"
+                  fill="#9a968e">PORTFOLIO</text>
+            <text x="114" y="45"
+                  font-family="'Inter', Helvetica, Arial, sans-serif"
+                  font-size="9" font-weight="500" letter-spacing="1.8"
+                  fill="#9a968e">&amp; PMO</text>
+            <text x="114" y="58"
+                  font-family="'Inter', Helvetica, Arial, sans-serif"
+                  font-size="9" font-weight="500" letter-spacing="1.8"
+                  fill="#9a968e">LEADERSHIP</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Light -->
+      <div class="preview-box light">
+        <span class="preview-label">On light</span>
+        <div class="logo-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 80" fill="none">
+            <text x="4" y="52"
+                  font-family="'Playfair Display', Georgia, serif"
+                  font-size="52" font-weight="700" letter-spacing="-2"
+                  fill="#0f1117">M</text>
+            <text x="38" y="52"
+                  font-family="'Playfair Display', Georgia, serif"
+                  font-size="52" font-weight="700" letter-spacing="-2"
+                  fill="#c9933a">M</text>
+            <rect x="4" y="57" width="74" height="2.5" rx="1.25" fill="#c9933a"/>
+            <text x="4" y="71"
+                  font-family="'Inter', Helvetica, Arial, sans-serif"
+                  font-size="9" font-weight="600" letter-spacing="3.2"
+                  fill="#9a968e">MANISH MADAN</text>
+            <line x1="104" y1="14" x2="104" y2="68" stroke="#c9933a" stroke-width="1" opacity="0.35"/>
+            <text x="114" y="32"
+                  font-family="'Inter', Helvetica, Arial, sans-serif"
+                  font-size="9" font-weight="500" letter-spacing="1.8"
+                  fill="#0f1117" opacity="0.45">PORTFOLIO</text>
+            <text x="114" y="45"
+                  font-family="'Inter', Helvetica, Arial, sans-serif"
+                  font-size="9" font-weight="500" letter-spacing="1.8"
+                  fill="#0f1117" opacity="0.45">&amp; PMO</text>
+            <text x="114" y="58"
+                  font-family="'Inter', Helvetica, Arial, sans-serif"
+                  font-size="9" font-weight="500" letter-spacing="1.8"
+                  fill="#0f1117" opacity="0.45">LEADERSHIP</text>
+          </svg>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Notes ── -->
+  <div class="notes">
+    <h3>Design notes</h3>
+    <ul>
+      <li><strong>Logo 1</strong> works best at full width — nav bars, email signatures, letterheads. The icon scales independently for favicons.</li>
+      <li><strong>Logo 2</strong> works best as a standalone mark — hero headers, social profile images, presentation covers. The MM monogram is distinctive at any size.</li>
+      <li>Amber (#c9933a) holds contrast on both dark and light backgrounds — no variant needed for the accent color.</li>
+      <li>Text switches between #e8e4dc (dark bg) and #0f1117 (light bg). Both SVG files are pre-set for dark backgrounds; swap the fill values for a light-bg export.</li>
+      <li>To use in the website nav: inline the SVG directly into index.html for best rendering and no HTTP request.</li>
+    </ul>
+  </div>
+
+</body>
+</html>

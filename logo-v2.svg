@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 80" fill="none" role="img" aria-label="Manish Madan typographic logo">
+  <defs>
+    <style>
+      .t-mono  { font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; }
+      .t-sub   { font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif; }
+    </style>
+  </defs>
+
+  <!-- ── Monogram: MM ──
+       Large serif initials. Left M in charcoal, right M echoed in amber.
+       Amber crossbar accent beneath binds them. -->
+
+  <!-- Left M -->
+  <text x="4" y="52" class="t-mono"
+        font-size="52" font-weight="700" letter-spacing="-2"
+        fill="#0f1117">M</text>
+
+  <!-- Right M — amber, slightly offset and lighter to create depth -->
+  <text x="38" y="52" class="t-mono"
+        font-size="52" font-weight="700" letter-spacing="-2"
+        fill="#c9933a">M</text>
+
+  <!-- Amber rule beneath monogram -->
+  <rect x="4" y="57" width="74" height="2.5" rx="1.25" fill="#c9933a"/>
+
+  <!-- ── Full name + descriptor ── -->
+  <text x="4" y="71" class="t-sub"
+        font-size="9" font-weight="600" letter-spacing="3.2"
+        fill="#9a968e">MANISH MADAN</text>
+
+  <!-- Right column: thin vertical rule + tagline rotated — optional, adds refinement -->
+  <line x1="104" y1="14" x2="104" y2="68" stroke="#c9933a" stroke-width="1" opacity="0.35"/>
+
+  <!-- Tagline stacked vertically beside monogram -->
+  <text x="114" y="32" class="t-sub"
+        font-size="9" font-weight="500" letter-spacing="1.8"
+        fill="#0f1117" opacity="0.55">PORTFOLIO</text>
+  <text x="114" y="45" class="t-sub"
+        font-size="9" font-weight="500" letter-spacing="1.8"
+        fill="#0f1117" opacity="0.55">&amp; PMO</text>
+  <text x="114" y="58" class="t-sub"
+        font-size="9" font-weight="500" letter-spacing="1.8"
+        fill="#0f1117" opacity="0.55">LEADERSHIP</text>
+</svg>
